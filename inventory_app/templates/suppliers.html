@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Fornecedores | Estoque Pro{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="panel">
+      <h5 class="panel-title">Novo fornecedor</h5>
+      <form method="post" class="row g-2">
+        <div class="col-12"><label class="form-label">Nome</label><input name="name" class="form-control" required /></div>
+        <div class="col-12"><label class="form-label">Contato</label><input name="contact_name" class="form-control" /></div>
+        <div class="col-12"><label class="form-label">E-mail</label><input name="email" type="email" class="form-control" /></div>
+        <div class="col-12"><label class="form-label">Telefone</label><input name="phone" class="form-control" /></div>
+        <div class="col-12"><button class="btn btn-accent w-100">Cadastrar fornecedor</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="panel">
+      <h5 class="panel-title">Fornecedores cadastrados</h5>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Contato</th>
+              <th>Email</th>
+              <th>Telefone</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in suppliers %}
+            <tr>
+              <td>{{ s.name }}</td>
+              <td>{{ s.contact_name or '-' }}</td>
+              <td>{{ s.email or '-' }}</td>
+              <td>{{ s.phone or '-' }}</td>
+              <td class="text-end">
+                <form method="post" action="{{ url_for('main.delete_supplier', supplier_id=s.id) }}" onsubmit="return confirm('Remover fornecedor?')">
+                  <button class="btn btn-sm btn-outline-danger">Excluir</button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-secondary">Nenhum fornecedor cadastrado.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

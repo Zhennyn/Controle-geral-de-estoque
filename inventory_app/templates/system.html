@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Sistema | Estoque Pro{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="panel">
+      <h5 class="panel-title">Backup manual</h5>
+      <form method="post">
+        <input type="hidden" name="action" value="create_backup" />
+        <button class="btn btn-accent w-100">Gerar backup agora</button>
+      </form>
+      <p class="small text-secondary mt-3 mb-0">Backup automatico diario e criado ao iniciar o sistema.</p>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="panel">
+      <h5 class="panel-title">Restaurar backup</h5>
+      <form method="post" class="row g-2" onsubmit="return confirm('Restaurar backup substitui os dados atuais. Continuar?')">
+        <input type="hidden" name="action" value="restore_backup" />
+        <div class="col-md-8">
+          <select name="backup_file" class="form-select" required>
+            <option value="">Selecione um backup</option>
+            {% for b in backups %}
+            <option value="{{ b.name }}">{{ b.name }} - {{ b.modified_at }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-outline-danger w-100">Restaurar</button>
+        </div>
+      </form>
+
+      <hr />
+      <h6>Historico de backups</h6>
+      <ul class="list-group list-group-flush mt-2">
+        {% for b in backups %}
+        <li class="list-group-item px-0 d-flex justify-content-between">
+          <span>{{ b.name }}</span>
+          <span class="small text-secondary">{{ b.size_kb }} KB</span>
+        </li>
+        {% else %}
+        <li class="list-group-item px-0 text-secondary">Nenhum backup encontrado.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

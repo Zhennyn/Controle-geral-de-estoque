@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}Produtos | Estoque Pro{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-12">
+    <div class="panel">
+      <h5 class="panel-title">Cadastrar produto</h5>
+      <form method="post" class="row g-2">
+        <div class="col-md-2"><label class="form-label">SKU</label><input name="sku" class="form-control" required /></div>
+        <div class="col-md-4"><label class="form-label">Nome</label><input name="name" class="form-control" required /></div>
+        <div class="col-md-3"><label class="form-label">Categoria</label>
+          <select name="category_id" class="form-select">
+            <option value="">-</option>
+            {% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3"><label class="form-label">Fornecedor</label>
+          <select name="supplier_id" class="form-select">
+            <option value="">-</option>
+            {% for s in suppliers %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2"><label class="form-label">Qtd inicial</label><input name="quantity" type="number" min="0" class="form-control" value="0" /></div>
+        <div class="col-md-2"><label class="form-label">Minimo</label><input name="min_stock" type="number" min="0" class="form-control" value="0" /></div>
+        <div class="col-md-2"><label class="form-label">Custo</label><input name="cost_price" type="number" step="0.01" min="0" class="form-control" value="0.00" /></div>
+        <div class="col-md-2"><label class="form-label">Venda</label><input name="sale_price" type="number" step="0.01" min="0" class="form-control" value="0.00" /></div>
+        <div class="col-md-4"><label class="form-label">Descricao</label><input name="description" class="form-control" /></div>
+        <div class="col-md-12"><button class="btn btn-accent">Salvar produto</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="panel">
+      <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+        <h5 class="panel-title mb-0">Produtos cadastrados</h5>
+        <form method="get" class="d-flex" role="search">
+          <input name="q" value="{{ query }}" class="form-control me-2" placeholder="Buscar por nome ou SKU" />
+          <button class="btn btn-outline-secondary">Buscar</button>
+        </form>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>SKU</th><th>Nome</th><th>Categoria</th><th>Qtd</th><th>Min.</th><th>Custo</th><th>Venda</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in products %}
+            <tr class="{% if p.is_low_stock %}table-warning{% endif %}">
+              <td>{{ p.sku }}</td>
+              <td>{{ p.name }}</td>
+              <td>{{ p.category.name if p.category else '-' }}</td>
+              <td>{{ p.quantity }}</td>
+              <td>{{ p.min_stock }}</td>
+              <td>R$ {{ '%.2f'|format(p.cost_price or 0) }}</td>
+              <td>R$ {{ '%.2f'|format(p.sale_price or 0) }}</td>
+              <td class="text-end d-flex gap-1 justify-content-end">
+                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editModal{{ p.id }}">Editar</button>
+                <form method="post" action="{{ url_for('main.delete_product', product_id=p.id) }}" onsubmit="return confirm('Excluir produto?')">
+                  <button class="btn btn-sm btn-outline-danger">Excluir</button>
+                </form>
+              </td>
+            </tr>
+
+            <div class="modal fade" id="editModal{{ p.id }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-lg">
+                <form class="modal-content" method="post" action="{{ url_for('main.update_product_route', product_id=p.id) }}">
+                  <div class="modal-header"><h5 class="modal-title">Editar {{ p.name }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                  <div class="modal-body row g-2">
+                    <div class="col-md-3"><label class="form-label">SKU</label><input name="sku" class="form-control" value="{{ p.sku }}" required /></div>
+                    <div class="col-md-6"><label class="form-label">Nome</label><input name="name" class="form-control" value="{{ p.name }}" required /></div>
+                    <div class="col-md-3"><label class="form-label">Minimo</label><input name="min_stock" type="number" min="0" class="form-control" value="{{ p.min_stock }}" /></div>
+                    <div class="col-md-3"><label class="form-label">Custo</label><input name="cost_price" type="number" step="0.01" min="0" class="form-control" value="{{ p.cost_price or 0 }}" /></div>
+                    <div class="col-md-3"><label class="form-label">Venda</label><input name="sale_price" type="number" step="0.01" min="0" class="form-control" value="{{ p.sale_price or 0 }}" /></div>
+                    <div class="col-md-3"><label class="form-label">Categoria</label>
+                      <select name="category_id" class="form-select">
+                        <option value="">-</option>
+                        {% for c in categories %}<option value="{{ c.id }}" {% if p.category_id == c.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-md-3"><label class="form-label">Fornecedor</label>
+                      <select name="supplier_id" class="form-select">
+                        <option value="">-</option>
+                        {% for s in suppliers %}<option value="{{ s.id }}" {% if p.supplier_id == s.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-md-12"><label class="form-label">Descricao</label><input name="description" class="form-control" value="{{ p.description or '' }}" /></div>
+                  </div>
+                  <div class="modal-footer"><button class="btn btn-accent">Salvar alteracoes</button></div>
+                </form>
+              </div>
+            </div>
+            {% else %}
+            <tr><td colspan="8" class="text-secondary">Nenhum produto encontrado.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <small class="text-secondary">Total: {{ total }}</small>
+        <div class="btn-group">
+          <a class="btn btn-sm btn-outline-secondary {% if not has_prev %}disabled{% endif %}" href="{{ url_for('main.products', q=query, page=page-1) if has_prev else '#' }}">Anterior</a>
+          <span class="btn btn-sm btn-light disabled">Pagina {{ page }}</span>
+          <a class="btn btn-sm btn-outline-secondary {% if not has_next %}disabled{% endif %}" href="{{ url_for('main.products', q=query, page=page+1) if has_next else '#' }}">Proxima</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

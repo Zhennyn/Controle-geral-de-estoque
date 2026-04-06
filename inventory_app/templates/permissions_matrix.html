@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Matriz de Permissoes | Estoque Pro{% endblock %}
+{% block content %}
+<div class="panel mb-3">
+  <div class="d-flex justify-content-between align-items-center gap-2">
+    <h5 class="panel-title mb-0">Matriz de permissoes</h5>
+    <a class="btn btn-outline-secondary" href="{{ url_for('main.users_management') }}">Voltar</a>
+  </div>
+</div>
+
+<div class="panel">
+  <form method="post">
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            {% for p in permissions %}
+            <th class="text-center" title="{{ p.label }}">{{ p.key }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td><strong>{{ u.username }}</strong><br /><small class="text-secondary">{{ u.role }}</small></td>
+            <input type="hidden" name="user_ids" value="{{ u.id }}" />
+            {% for p in permissions %}
+            <td class="text-center">
+              <input type="checkbox" name="perm_{{ u.id }}" value="{{ p.key }}" {% if p.key in matrix[u.id] %}checked{% endif %} {% if u.id == current_user.id and p.key == 'manage_permissions' %}disabled{% endif %} />
+              {% if u.id == current_user.id and p.key == 'manage_permissions' %}
+              <input type="hidden" name="perm_{{ u.id }}" value="manage_permissions" />
+              {% endif %}
+            </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="mt-3">
+      <button class="btn btn-accent">Salvar matriz</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

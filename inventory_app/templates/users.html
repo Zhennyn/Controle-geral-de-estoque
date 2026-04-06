@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Usuarios | Estoque Pro{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="panel">
+      <h5 class="panel-title">Novo usuario</h5>
+      <form method="post" class="row g-2">
+        <div class="col-12">
+          <label class="form-label">Usuario</label>
+          <input name="username" class="form-control" required />
+        </div>
+        <div class="col-12">
+          <label class="form-label">Senha</label>
+          <input name="password" type="password" minlength="6" class="form-control" required />
+        </div>
+        <div class="col-12">
+          <label class="form-label">Perfil</label>
+          <select name="role" class="form-select">
+            <option value="operador">Operador</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+        <div class="col-12">
+          <button class="btn btn-accent w-100">Criar usuario</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="panel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="panel-title mb-0">Usuarios cadastrados</h5>
+        <a class="btn btn-sm btn-outline-dark" href="{{ url_for('main.permissions_matrix') }}">Matriz de permissoes</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Perfil</th>
+              <th>Status</th>
+              <th>Acoes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in users %}
+            <tr>
+              <td>{{ u.username }}</td>
+              <td>{{ u.role }}</td>
+              <td>{% if u.is_active %}<span class="badge text-bg-success">Ativo</span>{% else %}<span class="badge text-bg-secondary">Inativo</span>{% endif %}</td>
+              <td>
+                <div class="d-flex gap-2 flex-wrap">
+                  <form method="post" action="{{ url_for('main.toggle_user_status', user_id=u.id) }}">
+                    <button class="btn btn-sm btn-outline-secondary">{% if u.is_active %}Desativar{% else %}Ativar{% endif %}</button>
+                  </form>
+                  <a class="btn btn-sm btn-outline-dark" href="{{ url_for('main.user_permissions', user_id=u.id) }}">Permissoes</a>
+                  <form method="post" action="{{ url_for('main.reset_user_password', user_id=u.id) }}" class="d-flex gap-1">
+                    <input name="new_password" class="form-control form-control-sm" minlength="6" placeholder="Nova senha" required />
+                    <button class="btn btn-sm btn-outline-primary">Resetar senha</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-secondary">Sem usuarios.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

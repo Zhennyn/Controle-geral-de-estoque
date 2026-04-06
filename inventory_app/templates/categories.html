@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Categorias | Estoque Pro{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="panel">
+      <h5 class="panel-title">Nova categoria</h5>
+      <form method="post" class="row g-2">
+        <div class="col-12">
+          <label class="form-label">Nome</label>
+          <input name="name" class="form-control" required />
+        </div>
+        <div class="col-12">
+          <label class="form-label">Descricao</label>
+          <textarea name="description" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="col-12">
+          <button class="btn btn-accent w-100">Salvar categoria</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="panel">
+      <h5 class="panel-title">Categorias cadastradas</h5>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Descricao</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in categories %}
+            <tr>
+              <td>{{ c.name }}</td>
+              <td>{{ c.description or '-' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="2" class="text-secondary">Nenhuma categoria cadastrada.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

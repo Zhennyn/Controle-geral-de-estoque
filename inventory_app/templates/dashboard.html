@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard | Estoque Pro{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="title-page mb-1">Painel de Estoque</h1>
+    <p class="text-secondary mb-0">Visao geral em tempo real do inventario.</p>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="kpi-card">
+      <p>Produtos</p>
+      <h3>{{ total_products }}</h3>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="kpi-card">
+      <p>Itens em estoque</p>
+      <h3>{{ total_items }}</h3>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="kpi-card">
+      <p>Valor em estoque</p>
+      <h3>R$ {{ '%.2f'|format(stock_value or 0) }}</h3>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="kpi-card warning">
+      <p>Estoque baixo</p>
+      <h3>{{ low_stock_count }}</h3>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="kpi-card warning">
+      <p>Lotes a vencer (30d)</p>
+      <h3>{{ expiring_count }}</h3>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="kpi-card">
+      <p>Compras pendentes</p>
+      <h3>{{ pending_purchases }}</h3>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="kpi-card">
+      <p>Vendas em rascunho</p>
+      <h3>{{ pending_sales }}</h3>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="panel">
+      <h5 class="panel-title">Ultimas movimentacoes</h5>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Produto</th>
+              <th>Tipo</th>
+              <th>Qtd.</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in recent_movements %}
+            <tr>
+              <td>{{ m.created_at.strftime('%d/%m %H:%M') }}</td>
+              <td>{{ m.product.name }}</td>
+              <td><span class="pill {{ m.movement_type }}">{{ m.movement_type }}</span></td>
+              <td>{{ m.quantity }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-secondary">Sem movimentacoes registradas.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="panel">
+      <h5 class="panel-title">Produtos com estoque baixo</h5>
+      <ul class="list-group list-group-flush">
+        {% for p in low_stock_products %}
+        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+          <span>{{ p.name }} <small class="text-secondary">({{ p.sku }})</small></span>
+          <span class="badge rounded-pill text-bg-danger">{{ p.quantity }}/{{ p.min_stock }}</span>
+        </li>
+        {% else %}
+        <li class="list-group-item px-0 text-secondary">Nenhum item em alerta.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

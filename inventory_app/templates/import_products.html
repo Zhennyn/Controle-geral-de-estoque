@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Importacao CSV | Estoque Pro{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="panel">
+      <h5 class="panel-title">Importar produtos via CSV</h5>
+      <p class="text-secondary small">Colunas esperadas: sku,name,description,cost_price,sale_price,quantity,min_stock</p>
+      <form method="post" enctype="multipart/form-data" class="row g-2">
+        <div class="col-12">
+          <input type="file" name="file" accept=".csv" class="form-control" required />
+        </div>
+        <div class="col-12">
+          <label class="form-check d-flex gap-2 align-items-center">
+            <input class="form-check-input" type="checkbox" name="dry_run" value="1" />
+            <span>Simular importacao (nao grava no banco)</span>
+          </label>
+        </div>
+        <div class="col-12">
+          <button class="btn btn-accent">Importar arquivo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel">
+      <h5 class="panel-title">Template rapido</h5>
+      <pre class="small mb-0">sku,name,description,cost_price,sale_price,quantity,min_stock
+ABC-001,Produto A,Descricao,10.50,15.90,12,3
+ABC-002,Produto B,,8.20,13.70,4,2</pre>
+    </div>
+  </div>
+
+  {% if summary %}
+  <div class="col-12">
+    <div class="panel">
+      <h5 class="panel-title">Ultima importacao</h5>
+      <p class="mb-2">Modo: <strong>{% if summary.dry_run %}Simulacao{% else %}Aplicado{% endif %}</strong></p>
+      <p class="mb-2">Criados: <strong>{{ summary.created }}</strong> | Atualizados: <strong>{{ summary.updated }}</strong> | Erros: <strong>{{ summary.errors }}</strong></p>
+      {% if errors and errors|length > 0 %}
+      <a class="btn btn-sm btn-outline-danger mb-2" href="{{ url_for('main.export_product_import_errors_csv') }}">Exportar erros CSV</a>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle">
+          <thead><tr><th>Linha</th><th>SKU</th><th>Nome</th><th>Erro</th></tr></thead>
+          <tbody>
+            {% for e in errors[:50] %}
+            <tr>
+              <td>{{ e.line }}</td>
+              <td>{{ e.sku or '-' }}</td>
+              <td>{{ e.name or '-' }}</td>
+              <td>{{ e.error }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

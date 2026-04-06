@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Compras | Estoque Pro{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="panel">
+      <h5 class="panel-title">Novo pedido de compra</h5>
+      <form method="post" class="row g-2">
+        <div class="col-12">
+          <label class="form-label">Fornecedor</label>
+          <select name="supplier_id" class="form-select" required>
+            <option value="">Selecione</option>
+            {% for s in suppliers %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-12"><label class="form-label">Ou fornecedor rapido</label><input name="quick_supplier_name" class="form-control" placeholder="Nome do novo fornecedor" /></div>
+        <div class="col-6"><label class="form-label">Telefone</label><input name="quick_supplier_phone" class="form-control" /></div>
+        <div class="col-6"><label class="form-label">E-mail</label><input name="quick_supplier_email" class="form-control" /></div>
+        <div class="col-12"><label class="form-label">Data prevista</label><input type="date" name="expected_date" class="form-control" /></div>
+        <div class="col-12"><label class="form-label">Observacoes</label><textarea name="notes" class="form-control" rows="3"></textarea></div>
+        <div class="col-12"><button class="btn btn-accent w-100">Criar pedido</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="panel">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h5 class="panel-title mb-0">Pedidos de compra</h5>
+        <form method="get" class="d-flex flex-wrap gap-2">
+          <select name="status" class="form-select">
+            <option value="">Todos status</option>
+            <option value="rascunho" {% if selected_status == 'rascunho' %}selected{% endif %}>Rascunho</option>
+            <option value="recebido" {% if selected_status == 'recebido' %}selected{% endif %}>Recebido</option>
+          </select>
+          <select name="supplier_id" class="form-select">
+            <option value="">Todos fornecedores</option>
+            {% for s in suppliers %}<option value="{{ s.id }}" {% if selected_supplier|int == s.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+          </select>
+          <input name="start_date" type="date" value="{{ selected_start_date }}" class="form-control" />
+          <input name="end_date" type="date" value="{{ selected_end_date }}" class="form-control" />
+          <button class="btn btn-outline-secondary">Filtrar</button>
+        </form>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>ID</th><th>Fornecedor</th><th>Status</th><th>Total</th><th>Criado em</th><th></th></tr></thead>
+          <tbody>
+            {% for o in orders %}
+            <tr>
+              <td>#{{ o.id }}</td>
+              <td>{{ o.supplier.name }}</td>
+              <td><span class="pill {% if o.status == 'recebido' %}entrada{% else %}ajuste{% endif %}">{{ o.status }}</span></td>
+              <td>R$ {{ '%.2f'|format(o.total_cost) }}</td>
+              <td>{{ o.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+              <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('main.purchase_order_detail', order_id=o.id) }}">Abrir</a></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-secondary">Sem pedidos de compra.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <small class="text-secondary">Total: {{ total }}</small>
+        <div class="btn-group">
+          <a class="btn btn-sm btn-outline-secondary {% if not has_prev %}disabled{% endif %}" href="{{ url_for('main.purchase_orders', status=selected_status, supplier_id=selected_supplier, start_date=selected_start_date, end_date=selected_end_date, page=page-1) if has_prev else '#' }}">Anterior</a>
+          <span class="btn btn-sm btn-light disabled">Pagina {{ page }}</span>
+          <a class="btn btn-sm btn-outline-secondary {% if not has_next %}disabled{% endif %}" href="{{ url_for('main.purchase_orders', status=selected_status, supplier_id=selected_supplier, start_date=selected_start_date, end_date=selected_end_date, page=page+1) if has_next else '#' }}">Proxima</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

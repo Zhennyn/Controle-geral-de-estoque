@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Relatorios | Estoque Pro{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h1 class="title-page mb-1">Relatorios</h1>
+    <p class="text-secondary mb-0">Analise financeira e operacional do estoque.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{{ url_for('main.export_products_csv') }}">Exportar Produtos CSV</a>
+    <a class="btn btn-accent" href="{{ url_for('main.export_movements_csv') }}">Exportar Movimentacoes CSV</a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="kpi-card h-100">
+      <p>Valor total do estoque</p>
+      <h3>R$ {{ '%.2f'|format(total_value) }}</h3>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="kpi-card h-100">
+      <p>Compras recebidas</p>
+      <h3>{{ purchases_received }}</h3>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="kpi-card h-100">
+      <p>Vendas concluidas</p>
+      <h3>{{ sales_completed }}</h3>
+      <small class="text-secondary">Receita: R$ {{ '%.2f'|format(sales_revenue) }}</small>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="panel h-100">
+      <h5 class="panel-title">Resumo por produto</h5>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>Produto</th><th>Qtd</th><th>Custo</th><th>Valor total</th></tr></thead>
+          <tbody>
+            {% for p in products %}
+            <tr>
+              <td>{{ p.name }}</td>
+              <td>{{ p.quantity }}</td>
+              <td>R$ {{ '%.2f'|format(p.cost_price or 0) }}</td>
+              <td>R$ {{ '%.2f'|format(p.stock_value) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-secondary">Sem produtos.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="panel">
+      <h5 class="panel-title">Ultimas 50 movimentacoes</h5>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>Data</th><th>Produto</th><th>Tipo</th><th>Qtd</th><th>Motivo</th></tr></thead>
+          <tbody>
+            {% for m in movements %}
+            <tr>
+              <td>{{ m.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+              <td>{{ m.product.name }}</td>
+              <td><span class="pill {{ m.movement_type }}">{{ m.movement_type }}</span></td>
+              <td>{{ m.quantity }}</td>
+              <td>{{ m.reason or '-' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-secondary">Sem movimentacoes.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="panel">
+      <h5 class="panel-title">Lotes vencendo em ate 30 dias</h5>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>Produto</th><th>Lote</th><th>Validade</th><th>Disponivel</th></tr></thead>
+          <tbody>
+            {% for b in near_expiry %}
+            <tr>
+              <td>{{ b.product.name }}</td>
+              <td>{{ b.lot_code or '-' }}</td>
+              <td>{{ b.expiry_date.strftime('%d/%m/%Y') if b.expiry_date else '-' }}</td>
+              <td>{{ b.quantity_available }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-secondary">Sem lotes proximos da validade.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Compra #{{ order.id }} | Estoque Pro{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="title-page h4 mb-0">Pedido de compra #{{ order.id }}</h1>
+    <p class="text-secondary mb-0">Fornecedor: {{ order.supplier.name }} | Status: {{ order.status }}</p>
+  </div>
+  <div class="d-flex gap-2">
+    {% if order.status == 'rascunho' %}
+    <form method="post" action="{{ url_for('main.cancel_purchase_order', order_id=order.id) }}" onsubmit="return confirm('Cancelar pedido de compra?')">
+      <button class="btn btn-outline-danger">Cancelar</button>
+    </form>
+    <form method="post" action="{{ url_for('main.receive_purchase', order_id=order.id) }}">
+      <button class="btn btn-accent">Receber pedido</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="panel">
+      <h5 class="panel-title">Dados do pedido</h5>
+      <form method="post" action="{{ url_for('main.update_purchase_order', order_id=order.id) }}" class="row g-2 mb-3">
+        <div class="col-12">
+          <label class="form-label">Fornecedor</label>
+          <select name="supplier_id" class="form-select" {% if order.status != 'rascunho' %}disabled{% endif %}>
+            {% for s in suppliers %}
+            <option value="{{ s.id }}" {% if s.id == order.supplier_id %}selected{% endif %}>{{ s.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12"><label class="form-label">Data prevista</label><input type="date" name="expected_date" class="form-control" value="{{ order.expected_date.strftime('%Y-%m-%d') if order.expected_date else '' }}" {% if order.status != 'rascunho' %}disabled{% endif %} /></div>
+        <div class="col-12"><label class="form-label">Observacoes</label><textarea name="notes" class="form-control" rows="2" {% if order.status != 'rascunho' %}disabled{% endif %}>{{ order.notes or '' }}</textarea></div>
+        <div class="col-12"><button class="btn btn-outline-secondary w-100" {% if order.status != 'rascunho' %}disabled{% endif %}>Salvar pedido</button></div>
+      </form>
+
+      <hr />
+      <h5 class="panel-title">Adicionar item</h5>
+      <form method="post" class="row g-2">
+        <div class="col-12">
+          <label class="form-label">Produto</label>
+          <select name="product_id" class="form-select" required>
+            <option value="">Selecione</option>
+            {% for p in products %}<option value="{{ p.id }}">{{ p.sku }} - {{ p.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-6"><label class="form-label">Quantidade</label><input name="quantity" type="number" min="1" class="form-control" required /></div>
+        <div class="col-6"><label class="form-label">Custo unit.</label><input name="unit_cost" type="number" step="0.01" min="0" class="form-control" value="0.00" /></div>
+        <div class="col-6"><label class="form-label">Lote</label><input name="lot_code" class="form-control" /></div>
+        <div class="col-6"><label class="form-label">Validade</label><input name="expiry_date" type="date" class="form-control" /></div>
+        <div class="col-12"><button class="btn btn-outline-primary w-100" {% if order.status != 'rascunho' %}disabled{% endif %}>Adicionar</button></div>
+      </form>
+
+      <hr />
+      <h6 class="mb-2">Produto rapido</h6>
+      <form method="post" action="{{ url_for('main.create_product_quick') }}" class="row g-2">
+        <input type="hidden" name="next_url" value="{{ url_for('main.purchase_order_detail', order_id=order.id) }}" />
+        <div class="col-6"><label class="form-label">SKU</label><input name="sku" class="form-control" required /></div>
+        <div class="col-6"><label class="form-label">Nome</label><input name="name" class="form-control" required /></div>
+        <div class="col-6"><label class="form-label">Custo</label><input name="cost_price" type="number" step="0.01" min="0" value="0.00" class="form-control" /></div>
+        <div class="col-6"><label class="form-label">Venda</label><input name="sale_price" type="number" step="0.01" min="0" value="0.00" class="form-control" /></div>
+        <div class="col-12"><button class="btn btn-sm btn-outline-secondary w-100" {% if order.status != 'rascunho' %}disabled{% endif %}>Criar produto</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="panel">
+      <h5 class="panel-title">Itens do pedido</h5>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>Produto</th><th>Qtd</th><th>Custo</th><th>Lote</th><th>Validade</th><th></th></tr></thead>
+          <tbody>
+            {% for i in order.items %}
+            <tr>
+              <td>{{ i.product.name }}</td>
+              <td>{{ i.quantity }}</td>
+              <td>R$ {{ '%.2f'|format(i.unit_cost or 0) }}</td>
+              <td>{{ i.lot_code or '-' }}</td>
+              <td>{{ i.expiry_date.strftime('%d/%m/%Y') if i.expiry_date else '-' }}</td>
+              <td class="text-end">
+                {% if order.status == 'rascunho' %}
+                <form method="post" action="{{ url_for('main.update_purchase_item', order_id=order.id, item_id=i.id) }}" class="d-flex gap-1 justify-content-end flex-wrap">
+                  <input name="quantity" type="number" min="1" class="form-control form-control-sm" style="width: 76px;" value="{{ i.quantity }}" />
+                  <input name="unit_cost" type="number" step="0.01" min="0" class="form-control form-control-sm" style="width: 90px;" value="{{ i.unit_cost or 0 }}" />
+                  <input name="lot_code" class="form-control form-control-sm" style="width: 90px;" value="{{ i.lot_code or '' }}" placeholder="Lote" />
+                  <input name="expiry_date" type="date" class="form-control form-control-sm" style="width: 140px;" value="{{ i.expiry_date.strftime('%Y-%m-%d') if i.expiry_date else '' }}" />
+                  <button class="btn btn-sm btn-outline-primary">Salvar</button>
+                </form>
+                <form method="post" action="{{ url_for('main.delete_purchase_item', order_id=order.id, item_id=i.id) }}" onsubmit="return confirm('Remover item?')">
+                  <button class="btn btn-sm btn-outline-danger">Remover</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-secondary">Sem itens.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-2 text-end fw-semibold">Total do pedido: R$ {{ '%.2f'|format(order.total_cost) }}</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

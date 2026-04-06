@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Reposicao Inteligente | Estoque Pro{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h1 class="title-page mb-1">Reposicao inteligente</h1>
+    <p class="text-secondary mb-0">Curva ABC e sugestoes de compra por risco de ruptura.</p>
+  </div>
+</div>
+
+<div class="panel mb-4">
+  <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
+    <label class="form-label mb-0">Classe ABC</label>
+    <select class="form-select" name="class" style="max-width: 120px;">
+      <option value="">Todas</option>
+      <option value="A" {% if selected_class == 'A' %}selected{% endif %}>A</option>
+      <option value="B" {% if selected_class == 'B' %}selected{% endif %}>B</option>
+      <option value="C" {% if selected_class == 'C' %}selected{% endif %}>C</option>
+    </select>
+
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" value="1" id="only_needed" name="only_needed" {% if only_needed %}checked{% endif %} />
+      <label class="form-check-label" for="only_needed">Mostrar apenas com reposicao necessaria</label>
+    </div>
+
+    <button class="btn btn-outline-secondary">Aplicar</button>
+  </form>
+</div>
+
+<div class="panel">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>Produto</th><th>Classe</th><th>Qtd atual</th><th>Minimo</th><th>Vendido</th><th>Valor vendido</th><th>Alvo</th><th>Sugestao</th></tr></thead>
+      <tbody>
+        {% for s in suggestions %}
+        <tr class="{% if s.needs_restock %}table-warning{% endif %}">
+          <td>{{ s.product.name }}<br /><small class="text-secondary">{{ s.product.sku }}</small></td>
+          <td><span class="badge text-bg-dark">{{ s.abc_class }}</span></td>
+          <td>{{ s.product.quantity }}</td>
+          <td>{{ s.product.min_stock }}</td>
+          <td>{{ s.sold_qty }}</td>
+          <td>R$ {{ '%.2f'|format(s.sold_value) }}</td>
+          <td>{{ s.target_stock }}</td>
+          <td>{% if s.needs_restock %}<strong>{{ s.suggested_qty }}</strong>{% else %}<span class="text-secondary">OK</span>{% endif %}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-secondary">Sem itens para os filtros selecionados.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

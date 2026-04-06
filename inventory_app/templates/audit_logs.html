@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Auditoria | Estoque Pro{% endblock %}
+{% block content %}
+<div class="panel mb-3">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <h5 class="panel-title mb-0">Logs de auditoria</h5>
+    <form method="get" class="d-flex gap-2 flex-wrap">
+      <input name="username" value="{{ username }}" class="form-control" placeholder="Usuario" />
+      <input name="action" value="{{ action }}" class="form-control" placeholder="Acao" />
+      <input name="entity_type" value="{{ entity_type }}" class="form-control" placeholder="Entidade" />
+      <input name="entity_id" value="{{ entity_id }}" class="form-control" placeholder="ID entidade" />
+      <button class="btn btn-outline-secondary">Filtrar</button>
+    </form>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <small class="text-secondary">Total de registros: {{ total }}</small>
+    <div class="d-flex gap-2">
+      {% if has_prev %}
+      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('main.audit_logs', username=username, action=action, entity_type=entity_type, entity_id=entity_id, page=page-1) }}">Anterior</a>
+      {% endif %}
+      <span class="small align-self-center">Pagina {{ page }}</span>
+      {% if has_next %}
+      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('main.audit_logs', username=username, action=action, entity_type=entity_type, entity_id=entity_id, page=page+1) }}">Proxima</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>Data</th><th>Usuario</th><th>Acao</th><th>Entidade</th><th>Endpoint</th><th>Status</th><th>Detalhe</th></tr></thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td>{{ log.created_at.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+          <td>{{ log.username or '-' }}</td>
+          <td>{{ log.action }}</td>
+          <td>{{ log.entity_type or '-' }}{% if log.entity_id %} #{{ log.entity_id }}{% endif %}</td>
+          <td>{{ log.endpoint or '-' }}</td>
+          <td>{{ log.status_code or '-' }}</td>
+          <td>{{ log.detail or '-' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-secondary">Sem eventos de auditoria.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

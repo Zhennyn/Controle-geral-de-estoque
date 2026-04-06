@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Lotes | Estoque Pro{% endblock %}
+{% block content %}
+<div class="panel mb-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <h5 class="panel-title mb-0">Controle de lotes e validade</h5>
+    <form method="get" class="d-flex gap-2">
+      <select name="status" class="form-select">
+        <option value="todos" {% if selected_status == 'todos' %}selected{% endif %}>Todos</option>
+        <option value="proximo" {% if selected_status == 'proximo' %}selected{% endif %}>Vencendo em ate 30 dias</option>
+        <option value="vencido" {% if selected_status == 'vencido' %}selected{% endif %}>Vencidos</option>
+      </select>
+      <select name="product_id" class="form-select">
+        <option value="">Todos os produtos</option>
+        {% for p in products %}
+        <option value="{{ p.id }}" {% if selected_product|int == p.id %}selected{% endif %}>{{ p.name }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-outline-secondary">Filtrar</button>
+    </form>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th>Produto</th><th>Lote</th><th>Validade</th><th>Disponivel</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for b in batches %}
+        <tr>
+          <td>{{ b.product.name }}</td>
+          <td>{{ b.lot_code or '-' }}</td>
+          <td>{{ b.expiry_date.strftime('%d/%m/%Y') if b.expiry_date else '-' }}</td>
+          <td>{{ b.quantity_available }}/{{ b.quantity_total }}</td>
+          <td>
+            {% if b.expiry_date and b.expiry_date < today %}
+            <span class="badge text-bg-danger">Vencido</span>
+            {% elif b.expiry_date %}
+            <span class="badge text-bg-warning">A vencer</span>
+            {% else %}
+            <span class="badge text-bg-secondary">Sem validade</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <form method="post" action="{{ url_for('main.writeoff_batch', batch_id=b.id) }}" class="d-flex gap-1 justify-content-end flex-wrap">
+              <input name="quantity" type="number" min="1" max="{{ b.quantity_available }}" class="form-control form-control-sm" style="width: 74px;" placeholder="Qtd" required />
+              <input name="reason" class="form-control form-control-sm" style="width: 130px;" placeholder="Motivo baixa" />
+              <button class="btn btn-sm btn-outline-danger">Baixar</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-secondary">Nenhum lote encontrado.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="d-flex justify-content-between align-items-center mt-3">
+    <small class="text-secondary">Total: {{ total }}</small>
+    <div class="btn-group">
+      <a class="btn btn-sm btn-outline-secondary {% if not has_prev %}disabled{% endif %}" href="{{ url_for('main.batches', status=selected_status, product_id=selected_product, page=page-1) if has_prev else '#' }}">Anterior</a>
+      <span class="btn btn-sm btn-light disabled">Pagina {{ page }}</span>
+      <a class="btn btn-sm btn-outline-secondary {% if not has_next %}disabled{% endif %}" href="{{ url_for('main.batches', status=selected_status, product_id=selected_product, page=page+1) if has_next else '#' }}">Proxima</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

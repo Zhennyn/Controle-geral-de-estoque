@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}Financeiro | Estoque Pro{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h1 class="title-page mb-1">Financeiro</h1>
+    <p class="text-secondary mb-0">Contas a pagar/receber e fluxo de caixa operacional.</p>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-3"><div class="kpi-card h-100"><p>Receber pendente</p><h4>R$ {{ '%.2f'|format(summary.pending_receivable) }}</h4></div></div>
+  <div class="col-md-3"><div class="kpi-card h-100"><p>Pagar pendente</p><h4>R$ {{ '%.2f'|format(summary.pending_payable) }}</h4></div></div>
+  <div class="col-md-3"><div class="kpi-card h-100"><p>Saldo de caixa</p><h4>R$ {{ '%.2f'|format(summary.cash_balance) }}</h4></div></div>
+  <div class="col-md-3"><div class="kpi-card h-100"><p>Vencidos</p><h4>{{ summary.overdue_count }}</h4></div></div>
+</div>
+
+<div class="row g-4">
+  {% if current_user_can('manage_financial') %}
+  <div class="col-lg-4">
+    <div class="panel">
+      <h5 class="panel-title">Novo lancamento</h5>
+      <form method="post" class="row g-2">
+        <div class="col-6">
+          <label class="form-label">Tipo</label>
+          <select class="form-select" name="entry_type" required>
+            <option value="receber">Receber</option>
+            <option value="pagar">Pagar</option>
+          </select>
+        </div>
+        <div class="col-6">
+          <label class="form-label">Status</label>
+          <select class="form-select" name="status" required>
+            <option value="pendente">Pendente</option>
+            <option value="pago">Pago</option>
+          </select>
+        </div>
+        <div class="col-12"><label class="form-label">Descricao</label><input class="form-control" name="description" required /></div>
+        <div class="col-6"><label class="form-label">Categoria</label><input class="form-control" name="category" placeholder="Ex: Frete" /></div>
+        <div class="col-6"><label class="form-label">Valor</label><input class="form-control" name="amount" type="number" min="0.01" step="0.01" required /></div>
+        <div class="col-6"><label class="form-label">Vencimento</label><input class="form-control" name="due_date" type="date" /></div>
+        <div class="col-6"><label class="form-label">Referencia</label><input class="form-control" name="reference" /></div>
+        <div class="col-12"><button class="btn btn-accent w-100">Adicionar</button></div>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-8">
+  {% else %}
+  <div class="col-12">
+  {% endif %}
+    <div class="panel">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h5 class="panel-title mb-0">Lancamentos</h5>
+        <form method="get" class="d-flex flex-wrap gap-2">
+          <select name="entry_type" class="form-select">
+            <option value="">Todos os tipos</option>
+            <option value="receber" {% if selected_type == 'receber' %}selected{% endif %}>Receber</option>
+            <option value="pagar" {% if selected_type == 'pagar' %}selected{% endif %}>Pagar</option>
+          </select>
+          <select name="status" class="form-select">
+            <option value="">Todos status</option>
+            <option value="pendente" {% if selected_status == 'pendente' %}selected{% endif %}>Pendente</option>
+            <option value="pago" {% if selected_status == 'pago' %}selected{% endif %}>Pago</option>
+            <option value="cancelado" {% if selected_status == 'cancelado' %}selected{% endif %}>Cancelado</option>
+          </select>
+          <input name="start_date" type="date" class="form-control" value="{{ selected_start_date }}" />
+          <input name="end_date" type="date" class="form-control" value="{{ selected_end_date }}" />
+          <button class="btn btn-outline-secondary">Filtrar</button>
+        </form>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>Data</th><th>Descricao</th><th>Tipo</th><th>Status</th><th>Valor</th><th>Venc.</th><th></th></tr></thead>
+          <tbody>
+            {% for e in entries %}
+            <tr>
+              <td>{{ e.created_at.strftime('%d/%m/%Y') }}</td>
+              <td>{{ e.description }}{% if e.category %}<br /><small class="text-secondary">{{ e.category }}</small>{% endif %}</td>
+              <td><span class="pill {% if e.entry_type == 'receber' %}entrada{% else %}saida{% endif %}">{{ e.entry_type }}</span></td>
+              <td>
+                {% if e.status == 'pago' %}<span class="badge text-bg-success">Pago</span>{% elif e.status == 'cancelado' %}<span class="badge text-bg-secondary">Cancelado</span>{% elif e.is_overdue %}<span class="badge text-bg-danger">Vencido</span>{% else %}<span class="badge text-bg-warning">Pendente</span>{% endif %}
+              </td>
+              <td>R$ {{ '%.2f'|format(e.amount or 0) }}</td>
+              <td>{{ e.due_date.strftime('%d/%m/%Y') if e.due_date else '-' }}</td>
+              <td class="text-end">
+                {% if current_user_can('manage_financial') and e.status == 'pendente' %}
+                <div class="d-flex gap-1 justify-content-end">
+                  <form method="post" action="{{ url_for('main.mark_financial_paid', entry_id=e.id) }}"><button class="btn btn-sm btn-outline-success">Marcar pago</button></form>
+                  <form method="post" action="{{ url_for('main.cancel_financial_entry', entry_id=e.id) }}" onsubmit="return confirm('Cancelar lancamento?')"><button class="btn btn-sm btn-outline-danger">Cancelar</button></form>
+                </div>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" class="text-secondary">Sem lancamentos.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <small class="text-secondary">Total: {{ total }}</small>
+        <div class="btn-group">
+          <a class="btn btn-sm btn-outline-secondary {% if not has_prev %}disabled{% endif %}" href="{{ url_for('main.financial_entries', entry_type=selected_type, status=selected_status, start_date=selected_start_date, end_date=selected_end_date, page=page-1) if has_prev else '#' }}">Anterior</a>
+          <span class="btn btn-sm btn-light disabled">Pagina {{ page }}</span>
+          <a class="btn btn-sm btn-outline-secondary {% if not has_next %}disabled{% endif %}" href="{{ url_for('main.financial_entries', entry_type=selected_type, status=selected_status, start_date=selected_start_date, end_date=selected_end_date, page=page+1) if has_next else '#' }}">Proxima</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel mt-4">
+  <h5 class="panel-title">Fluxo de caixa (ultimos 14 dias)</h5>
+  <div class="table-responsive">
+    <table class="table table-sm align-middle">
+      <thead><tr><th>Data</th><th>Entradas</th><th>Saidas</th><th>Liquido</th></tr></thead>
+      <tbody>
+        {% for d in cashflow %}
+        <tr>
+          <td>{{ d.date }}</td>
+          <td class="text-success">R$ {{ '%.2f'|format(d.in) }}</td>
+          <td class="text-danger">R$ {{ '%.2f'|format(d.out) }}</td>
+          <td>R$ {{ '%.2f'|format(d.net) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
