@@ -338,9 +338,9 @@ Este projeto é licenciado sob a **MIT License** - veja o arquivo [LICENSE](LICE
 ## 💬 Dúvidas ou Sugestões?
 
 Fique à vontade para abrir uma **Issue** ou entrar em contato:
-- 💼 **LinkedIn**: [linkedin.com/in/seu-perfil](https://linkedin.com)
-- 📧 **Email**: seu.email@exemplo.com
-- 🐙 **GitHub**: [@seu-usuario](https://github.com/seu-usuario)
+- 💼 **LinkedIn**: [linkedin.com/in/matheus-lima-menezes](https://linkedin.com/in/matheus-lima-menezes)
+- 📧 **Email**: matheuslimamenezes2005.com
+- 🐙 **GitHub**: [@Zhennyn](https://github.com/Zhennyn)
 
 ---
 
